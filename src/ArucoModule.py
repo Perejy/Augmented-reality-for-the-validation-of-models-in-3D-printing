@@ -7,10 +7,12 @@ import numpy as np
 import os
 from Calibracion import *
 
-def findArucoMarkers(img, markerSize = 6, totalMarkers = 250, draw = True):
+def findArucoMarkers(img, markerSize = 6, totalMarkers = 250, draw = True, drawGray = False):
+    """Devuelve un array con las posiciones de las esquinas y el id del aruco encontrado"""
     imgGray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
     imgGray = binarize_kmeans(gaussian_smoothing(imgGray,0.2,1),5)
-    cv2.imshow("gray", imgGray)
+    if drawGray:
+        cv2.imshow("gray", imgGray)
     key = getattr(aruco,f'DICT_{markerSize}X{markerSize}_{totalMarkers}')
     arucoDict = aruco.getPredefinedDictionary(key)
     arucoParam = aruco.DetectorParameters()
@@ -73,6 +75,60 @@ def augmentAruco(bbox, id, img, imgAug, drawID = True):
         cv2.putText(imgOut, str(id), (int(tl[0]),int(tl[1])), cv2.FONT_HERSHEY_PLAIN, 2, (255,0,255), 2)
     
     return imgOut
+
+def show_corners(bbox, id, img):
+    
+    tl = (int(bbox[0][0][0]), int(bbox[0][0][1]))
+    tr = (int(bbox[0][1][0]), int(bbox[0][1][1]))
+    br = (int(bbox[0][2][0]), int(bbox[0][2][1]))
+    bl = (int(bbox[0][3][0]), int(bbox[0][3][1]))
+    
+    corners = [tl,tr,bl,br]
+    imgOut = img
+
+    for corner in corners:
+        imgOut = cv2.circle(imgOut, corner, 4, color=(0, 255, 0), thickness = -1)
+    
+    imgOut = cv2.circle(imgOut, middle_corners_point(corners), 4, color=(0, 0, 255), thickness = -1)
+    
+    return imgOut
+
+def middle_corners_point(corners):
+    """ Calcula el punto medio de 4 puntos
+    
+    Args: 
+        corners: array con las cuatro esquinas de un aruco [tl,tr,bl,br] en int
+
+        
+        Returns:
+        MiddlePoint: punto medio de los 4 puntos
+        
+        Calcula el punto medio entre tl y br, el de tr y bl y luego vuelve a hacer su punto medio
+    """
+    p1 = middle_point(corners[0],corners[3])
+    p2 = middle_point(corners[1],corners[2])
+    MiddlePoint = middle_point(p1,p2)
+    
+    return MiddlePoint
+    
+def middle_point(point1, point2):
+    """Calcula el punto medio de 2 puntos
+    
+    Args: 
+        point1: Primer punto 
+        point2: Segundo punto
+        
+    Return:
+        OutPoint: Punto medio de point1 y point2
+    """
+    
+    x = int((point1[0] + point2[0])/2)
+    y = int((point1[1] + point2[1])/2)
+    
+    OutPoint = (x,y)
+    
+    return OutPoint
+
 
 def gaussian_smoothing(image, sigma, w_kernel):
     """ Blur and normalize input image.   
