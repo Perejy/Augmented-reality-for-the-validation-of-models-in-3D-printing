@@ -76,7 +76,40 @@ def augmentAruco(bbox, id, img, imgAug, drawID = True):
     
     return imgOut
 
-def show_corners(bbox, id, img):
+
+def aruco_center(bbox, id, img):
+    """ Calcula la posición de los centros de los ArUcos.
+    
+    Args: 
+        bbox: Esquinas de los Arucos sin formato
+        id: identificador del ArUco
+        img: imagen del frame
+
+        Returns:
+        imgOut: Imagen resultante  
+    """
+    
+    imgOut, corners = aruco_corners(bbox,id, img)
+    
+    imgOut = cv2.circle(imgOut, middle_corners_point(corners), 4, color=(0, 0, 255), thickness = -1)
+    
+    return imgOut
+
+def aruco_corners(bbox, id, img, show=False):
+    """ Calcula la posición de las esquinas de los ArUcos. Si show es true se muestran en pantalla con puntos rojos
+    
+    Args: 
+        bbox: Esquinas de los Arucos sin formato
+        id: identificador del ArUco
+        img: imagen del frame
+        show(false): Muestra los puntos de las esquinas en la imagen
+
+        
+        Returns:
+        imgOut: Imagen resultante
+        corners: array con las cuatro esquinas de un aruco [tl,tr,bl,br] en int    
+    """
+    
     
     tl = (int(bbox[0][0][0]), int(bbox[0][0][1]))
     tr = (int(bbox[0][1][0]), int(bbox[0][1][1]))
@@ -86,12 +119,11 @@ def show_corners(bbox, id, img):
     corners = [tl,tr,bl,br]
     imgOut = img
 
-    for corner in corners:
-        imgOut = cv2.circle(imgOut, corner, 4, color=(0, 255, 0), thickness = -1)
+    if show:
+        for corner in corners:
+            imgOut = cv2.circle(imgOut, corner, 4, color=(0, 255, 0), thickness = -1)
     
-    imgOut = cv2.circle(imgOut, middle_corners_point(corners), 4, color=(0, 0, 255), thickness = -1)
-    
-    return imgOut
+    return imgOut, corners
 
 def middle_corners_point(corners):
     """ Calcula el punto medio de 4 puntos

@@ -26,7 +26,7 @@ def main():
             for bbox, id in zip(arucoFound[0], arucoFound[1]):
                 if int(id[0]) in augDics.keys():
                     ##frame = augmentAruco(bbox, id, frame, augDics[int(id)])
-                    frame = show_corners(bbox,id,frame)
+                    frame = aruco_center(bbox,id,frame)
                     
 
         
