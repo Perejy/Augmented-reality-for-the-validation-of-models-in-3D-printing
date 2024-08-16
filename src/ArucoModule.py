@@ -77,23 +77,65 @@ def augmentAruco(bbox, id, img, imgAug, drawID = True):
     return imgOut
 
 
-def aruco_center(bbox, id, img):
+def arucos_middle(CenterDic, img, show = False):
+    """ Calcula el centroide de todos los centros de los ArUcos
+    
+    Args: 
+        CenterDic: Diccionario de los centros de los aruco {id: (x,y)}
+        img: imagen del frame
+        show(false): Muestra el centroide
+
+    Returns:
+        imgOut: Imagen resultante  
+        center: devuelve la posición del centroide de los ArUcos (x,y)
+        
+    """
+    center = None
+    num_centers = len(CenterDic)
+    ListCenter = list(CenterDic.values()) # Recoge la lista de centros del diccionario
+    
+    if num_centers == 1:
+        center = ListCenter[0]
+    elif num_centers > 1:
+        sumax = 0
+        sumay = 0
+        
+        for center in ListCenter:
+            sumax += center[0]
+            sumay += center[1]
+        
+        center = (int(sumax/num_centers), int(sumay/num_centers))
+
+    if show:
+        imgOut = cv2.circle(img, center, 4, color=(255, 0, 255), thickness = -1)
+    else:
+        imgOut = img
+
+    return imgOut, center
+
+def aruco_center(bbox, id, img, show = False):
     """ Calcula la posición de los centros de los ArUcos.
     
     Args: 
         bbox: Esquinas de los Arucos sin formato
         id: identificador del ArUco
         img: imagen del frame
+        show(false): Muestra los puntos de las esquinas en la imagen
 
-        Returns:
+    Returns:
         imgOut: Imagen resultante  
+        center: devuelve la posición del centro del ArUco (x,y)
+        
     """
     
-    imgOut, corners = aruco_corners(bbox,id, img)
+    imgOut, corners = aruco_corners(bbox,id, img, show)
     
-    imgOut = cv2.circle(imgOut, middle_corners_point(corners), 4, color=(0, 0, 255), thickness = -1)
+    center = middle_corners_point(corners)
     
-    return imgOut
+    if show:
+        imgOut = cv2.circle(imgOut, center, 4, color=(0, 0, 255), thickness = -1)
+    
+    return imgOut, center
 
 def aruco_corners(bbox, id, img, show=False):
     """ Calcula la posición de las esquinas de los ArUcos. Si show es true se muestran en pantalla con puntos rojos
@@ -105,7 +147,7 @@ def aruco_corners(bbox, id, img, show=False):
         show(false): Muestra los puntos de las esquinas en la imagen
 
         
-        Returns:
+    Returns:
         imgOut: Imagen resultante
         corners: array con las cuatro esquinas de un aruco [tl,tr,bl,br] en int    
     """
@@ -132,7 +174,7 @@ def middle_corners_point(corners):
         corners: array con las cuatro esquinas de un aruco [tl,tr,bl,br] en int
 
         
-        Returns:
+    Returns:
         MiddlePoint: punto medio de los 4 puntos
         
         Calcula el punto medio entre tl y br, el de tr y bl y luego vuelve a hacer su punto medio
@@ -233,6 +275,7 @@ def binarize_kmeans(image,it):
 
 
 def main():
+    """Solo funciona con los marcadores que tengas almacenados como imagenes en la carpeta Markers"""
     cap = cv2.VideoCapture(1) # Selecciona la entrada de video, 0 para la camara del pc y 1 para cualquier camara externa
     
     calib= calibracion()    # Obejto calibracion 
