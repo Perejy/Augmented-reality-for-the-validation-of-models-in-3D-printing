@@ -21,13 +21,14 @@ def main():
         sccuuess, frame = cap.read()  # Toma imagenes de la camara 
         arucoFound = findArucoMarkers(frame, draw=False) # devuelve [bbox,id]
         
-        ## Loop through all the markers and augment each one
-        if len(arucoFound[0])!=0:
-            for bbox, id in zip(arucoFound[0], arucoFound[1]):        
-                frame, center = aruco_center(bbox,id,frame, show=True)
-                CentersDic[id[0]] = center
+        # ## Loop through all the markers and augment each one
+        # if len(arucoFound[0])!=0:
+        #     for bbox, id in zip(arucoFound[0], arucoFound[1]):        
+        #         frame, center = aruco_center(bbox,id,frame, show=True)
+        #         CentersDic[id[0]] = center
             
-        frame, centro = arucos_middle(CentersDic,frame, show=True)            
+        # frame, centro = arucos_middle(CentersDic,frame, show=True)  
+        frame, _ = arucos_square(arucoFound, frame, show= True)         
         
         cv2.imshow("Image", frame)
         cv2.waitKey(1)

@@ -77,6 +77,81 @@ def augmentAruco(bbox, id, img, imgAug, drawID = True):
     return imgOut
 
 
+def arucos_square(arucos, frame, show = False):
+    ### arucos es un array con todos las esquinas y otro array con todos los ids, concuerdan entre ellos
+    """ Ejemplo con dos arucos
+    [(array([[[331., 398.],
+        [ 74., 408.],
+        [100., 173.],
+        [321., 170.]]], dtype=float32), array([[[630., 376.],
+        [404., 387.],
+        [384., 179.],
+        [582., 172.]]], dtype=float32)), array([[ 2],
+       [23]], dtype=int32)]
+    {2: (206, 287), 23: (500, 278)}
+    
+    """
+    CentersDic = {}
+    tl_list = []
+    tr_list = []
+    br_list = []
+    bl_list = []
+    
+    tl_max = (0,0)
+    tr_max = (0,0)
+    br_max = (0,0)
+    bl_max = (0,0)
+    
+    if len(arucos[0])!=0:
+        for bbox, id in zip(arucos[0], arucos[1]):        
+            frame, center = aruco_center(bbox,id,frame, show=True)
+            CentersDic[id[0]] = center
+            tl_list.append((int(bbox[0][0][0]), int(bbox[0][0][1])))
+            tr_list.append((int(bbox[0][1][0]), int(bbox[0][1][1])))
+            br_list.append((int(bbox[0][2][0]), int(bbox[0][2][1])))
+            bl_list.append((int(bbox[0][3][0]), int(bbox[0][3][1])))
+        tl_max = center
+        tr_max = center
+        br_max = center
+        bl_max = center        
+    
+    _, centro = arucos_middle(CentersDic, frame, show=True)
+    
+    corners_array = [tl_list,tr_list,br_list,bl_list]
+    max_array = [tl_max,tr_max,br_max,bl_max]
+    i = 0
+    while i< 4:
+        xx_list = corners_array[i]
+        
+        j = 0
+        if len(xx_list) == 1:
+            max_array[i] = xx_list[0]   
+        elif len(xx_list) > 1:
+            max = manhattan(xx_list[j], centro)
+            j +=1
+            while j < len(xx_list):
+                distance = manhattan(xx_list[j], centro)
+                if max < distance:
+                    max = distance
+                    max_array[i] = xx_list[j]
+                j +=1      
+        i += 1;       
+    
+    if show:
+        v1, v2 = max_array[0][0],max_array[0][1]
+        v3, v4 = max_array[1][0],max_array[1][1]
+        v5, v6 = max_array[2][0],max_array[2][1]
+        v7, v8 = max_array[3][0],max_array[3][1]
+        
+        # Cara Inferior
+        cv2.line(frame, (int(v1), int(v2)), (int(v3), int(v4)), (255,255,0),3)
+        cv2.line(frame, (int(v5), int(v6)), (int(v7), int(v8)), (255,255,0),3)
+        cv2.line(frame, (int(v1), int(v2)), (int(v7), int(v8)), (255,255,0),3)
+        cv2.line(frame, (int(v3), int(v4)), (int(v5), int(v6)), (255,255,0),3)
+    
+    return frame, max_array
+
+
 def arucos_middle(CenterDic, img, show = False):
     """ Calcula el centroide de todos los centros de los ArUcos
     
@@ -202,6 +277,13 @@ def middle_point(point1, point2):
     OutPoint = (x,y)
     
     return OutPoint
+
+def manhattan(x,y):
+   total = 0
+   for i in range(len(x)):
+     diff = x[i] - y[i]
+     total = total + abs(diff)
+   return total
 
 
 def gaussian_smoothing(image, sigma, w_kernel):
