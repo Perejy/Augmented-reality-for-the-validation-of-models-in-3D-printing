@@ -1,11 +1,14 @@
 import cv2
 import cv2.aruco as aruco 
+import aruco_module as aru
 from scipy import signal
 import matplotlib.pyplot as plt
 import matplotlib
 import numpy as np
 import os
 from Calibracion import *
+from object_module import *
+from objloader_simple import *
 
 def findArucoMarkers(img, markerSize = 6, totalMarkers = 250, draw = True, drawGray = False):
     """Devuelve un array con las posiciones de las esquinas y el id del aruco encontrado"""
@@ -76,6 +79,37 @@ def augmentAruco(bbox, id, img, imgAug, drawID = True):
     
     return imgOut
 
+def augmentAruco3D(frame,bbox,marker,CameraMatrix, obj):   
+    
+    tl = bbox[0][0], bbox[0][1]
+    tr = bbox[1][0], bbox[1][1]
+    br = bbox[2][0], bbox[2][1]
+    bl = bbox[3][0], bbox[3][1]
+    
+    h, w= marker.shape
+    
+    pts1 = np.array([tl,tr,br,bl])
+    pts2 = np.float32([[0,0],[w,0],[w,h],[0,h]])
+    Homografia, _ = cv2.findHomography(pts2,pts1)
+    
+    R_T = aru.get_extended_RT(CameraMatrix, Homografia)
+    transformation = CameraMatrix.dot(R_T) 
+        
+    augmented = augment(frame, obj, transformation, marker)
+    
+    ##projection = projection_matrix(CameraMatrix,Homografia)
+    ##augmented = render(frame,obj,projection,marker,False)
+
+    return augmented
+
+def EncuentraAruco(path):
+    marker_colored = cv2.imread(path)
+    assert marker_colored is not None, "Could not find the aruco marker image file"
+
+    marker_colored =  cv2.resize(marker_colored, (480,480), interpolation = cv2.INTER_CUBIC )
+    marker = cv2.cvtColor(marker_colored, cv2.COLOR_BGR2GRAY)
+    
+    return marker
 
 def arucos_square(arucos, frame, show = False):
     ### arucos es un array con todos las esquinas y otro array con todos los ids, concuerdan entre ellos
@@ -163,7 +197,7 @@ def arucos_square(arucos, frame, show = False):
         cv2.line(frame, (int(v1), int(v2)), (int(v7), int(v8)), (255,255,0),3)
         cv2.line(frame, (int(v3), int(v4)), (int(v5), int(v6)), (255,255,0),3)
     
-    return frame, max_array
+    return frame, np.array(max_array)
 
 
 def arucos_middle(CenterDic, img, show = False):
