@@ -92,6 +92,16 @@ def arucos_square(arucos, frame, show = False):
        [23]], dtype=int32)]
     {2: (206, 287), 23: (500, 278)}
     
+    
+     Args: 
+        arucos: array con todos las esquinas y otro array con todos los ids
+        frame: imagen del frame
+        show(false): Muestra el cuadrado
+
+    Returns:
+        frame: Imagen resultante  
+        max_array: Las esquinas del cuadrado generado [tl_max,tr_max,br_max,bl_max]
+        
     """
     CentersDic = {}
     tl_list = []
