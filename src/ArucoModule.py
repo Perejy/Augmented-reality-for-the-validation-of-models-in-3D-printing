@@ -83,10 +83,12 @@ def arucos_square(arucos, frame, show = False):
     [(array([[[331., 398.],
         [ 74., 408.],
         [100., 173.],
-        [321., 170.]]], dtype=float32), array([[[630., 376.],
+        [321., 170.]]], dtype=float32), 
+        array([[[630., 376.],
         [404., 387.],
         [384., 179.],
-        [582., 172.]]], dtype=float32)), array([[ 2],
+        [582., 172.]]], dtype=float32)), 
+        array([[ 2],
        [23]], dtype=int32)]
     {2: (206, 287), 23: (500, 278)}
     
@@ -110,27 +112,29 @@ def arucos_square(arucos, frame, show = False):
             tr_list.append((int(bbox[0][1][0]), int(bbox[0][1][1])))
             br_list.append((int(bbox[0][2][0]), int(bbox[0][2][1])))
             bl_list.append((int(bbox[0][3][0]), int(bbox[0][3][1])))
+        ## Revisar esto de igualar todo a center
         tl_max = center
         tr_max = center
         br_max = center
         bl_max = center        
     
-    _, centro = arucos_middle(CentersDic, frame, show=True)
+    _, centroide = arucos_middle(CentersDic, frame, show=True)
     
     corners_array = [tl_list,tr_list,br_list,bl_list]
     max_array = [tl_max,tr_max,br_max,bl_max]
     i = 0
-    while i< 4:
+    while i< 4: ## Cuatro porque lo recorro una vez por cada esquina [tl,tr,br,bl]
         xx_list = corners_array[i]
         
         j = 0
         if len(xx_list) == 1:
             max_array[i] = xx_list[0]   
         elif len(xx_list) > 1:
-            max = manhattan(xx_list[j], centro)
+            max = manhattan(xx_list[j], centroide)
+            max_array[i] = xx_list[j]
             j +=1
             while j < len(xx_list):
-                distance = manhattan(xx_list[j], centro)
+                distance = manhattan(xx_list[j], centroide)
                 if max < distance:
                     max = distance
                     max_array[i] = xx_list[j]
