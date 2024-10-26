@@ -1,27 +1,25 @@
-# src/aruco_detection/marker_detection.py
-
 import cv2
 import numpy as np
 import time
 
-def detect_aruco_board(cam_matrix, dist_coeffs, markers_x=2, markers_y=3, marker_length=0.06, marker_separation=0.03, show_rejected=True, refind_strategy=True):
+def detect_aruco_board(cam_matrix, dist_coeffs, markers_x=3, markers_y=2, marker_length=0.06, marker_separation=0.03, show_rejected=False, refind_strategy=True):
     """
     Función para detectar el tablero de marcadores ArUco en tiempo real y estimar su pose.
     """
     # Cargar el diccionario de marcadores y parámetros de detección
-    aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
-    detector_params = cv2.aruco.DetectorParameters_create()
+    aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_6X6_50)
+    detector_params = cv2.aruco.DetectorParameters()
     detector = cv2.aruco.ArucoDetector(aruco_dict, detector_params)
 
     # Configuración de video
-    input_video = cv2.VideoCapture(0)
+    input_video = cv2.VideoCapture(1)
     wait_time = 10
 
     # Longitud del eje de referencia
     axis_length = 0.5 * (min(markers_x, markers_y) * (marker_length + marker_separation) + marker_separation)
 
     # Crear objeto GridBoard
-    board = cv2.aruco.GridBoard_create(markers_x, markers_y, marker_length, marker_separation, aruco_dict)
+    board = cv2.aruco.GridBoard((markers_x, markers_y), marker_length, marker_separation, aruco_dict)
 
     # Inicializar variables para el tiempo de procesamiento
     total_time = 0
