@@ -1,5 +1,4 @@
 import cv2
-from cv2 import aruco_board as cv2Board
 import numpy as np
 import time
 
@@ -17,18 +16,18 @@ def detect_lateral_aruco_board(cam_matrix, dist_coeffs, marker_length=0.08, show
     wait_time = 10
 
     # Definir las posiciones de los marcadores en el tablero
-    obj_points = np.array([
-        [0, 0, 0],  # Esquina superior izquierda
-        [0.12, 0, 0],  # Esquina superior derecha (20 cm - 8 cm = 12 cm)
-        [0, 0.42, 0],  # Esquina inferior izquierda (50 cm - 8 cm = 42 cm)
-        [0.12, 0.42, 0]  # Esquina inferior derecha
-    ], dtype=np.float32)
+    obj_points = [
+        np.array([[0, 0, 0], [0.07, 0, 0], [0.07, 0.07, 0], [0, 0.07, 0]], dtype=np.float32),  # Esquina superior izquierda
+        np.array([[0.12, 0, 0], [0.19, 0, 0], [0.19, 0.07, 0], [0.12, 0.07, 0]], dtype=np.float32),  # Esquina superior derecha
+        np.array([[0, 0.42, 0], [0.07, 0.42, 0], [0.07, 0.49, 0], [0, 0.49, 0]], dtype=np.float32),  # Esquina inferior izquierda
+        np.array([[0.12, 0.42, 0], [0.19, 0.42, 0], [0.19, 0.49, 0], [0.12, 0.49, 0]], dtype=np.float32)  # Esquina inferior derecha
+    ]
 
     # IDs de los marcadores
     ids = np.array([2, 3, 4, 5], dtype=np.int32)
 
     # Crear el objeto Board
-    board = cv2Board.aruco.Board(obj_points, aruco_dict, ids)
+    board = cv2.aruco.Board(obj_points, aruco_dict, ids)
 
     # Inicializar variables para el tiempo de procesamiento
     total_time = 0
