@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import time
 
-def detect_aruco_board(cam_matrix, dist_coeffs, markers_x=3, markers_y=2, marker_length=0.06, marker_separation=0.03, show_rejected=False, refind_strategy=True):
+def detect_aruco_board(cam_matrix, dist_coeffs, markers_x=3, markers_y=2, marker_length=0.07, marker_separation=0.02, show_rejected=False, refind_strategy=True):
     """
     Función para detectar el tablero de marcadores ArUco en tiempo real y estimar su pose.
     """
@@ -43,6 +43,11 @@ def detect_aruco_board(cam_matrix, dist_coeffs, markers_x=3, markers_y=2, marker
         markers_of_board_detected = 0
         if ids is not None and len(ids) > 0:
             obj_points, img_points = board.matchImagePoints(corners, ids)
+            # TODO: ELIMIAR COMENTARIOS
+            # print("obj")
+            # print(obj_points)
+            # print("img")
+            # print(img_points)
             if obj_points is not None and img_points is not None:
                 _, rvec, tvec = cv2.solvePnP(obj_points, img_points, cam_matrix, dist_coeffs)
                 markers_of_board_detected = int(obj_points.shape[0] / 4)

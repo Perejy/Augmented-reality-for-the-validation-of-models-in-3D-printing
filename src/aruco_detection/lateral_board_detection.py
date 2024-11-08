@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import time
 
-def detect_lateral_aruco_board(cam_matrix, dist_coeffs, marker_length=0.08, show_rejected=False, refind_strategy=True):
+def detect_lateral_aruco_board(cam_matrix, dist_coeffs, marker_length=0.07, show_rejected=False, refind_strategy=True):
     """
     Función para detectar los marcadores ArUco en tiempo real y estimar su pose.
     """
@@ -16,18 +16,18 @@ def detect_lateral_aruco_board(cam_matrix, dist_coeffs, marker_length=0.08, show
     wait_time = 10
 
     # Definir las posiciones de los marcadores en el tablero
-    obj_points = [
-        np.array([[0, 0, 0], [0.07, 0, 0], [0.07, 0.07, 0], [0, 0.07, 0]], dtype=np.float32),  # Esquina superior izquierda
-        np.array([[0.12, 0, 0], [0.19, 0, 0], [0.19, 0.07, 0], [0.12, 0.07, 0]], dtype=np.float32),  # Esquina superior derecha
-        np.array([[0, 0.42, 0], [0.07, 0.42, 0], [0.07, 0.49, 0], [0, 0.49, 0]], dtype=np.float32),  # Esquina inferior izquierda
-        np.array([[0.12, 0.42, 0], [0.19, 0.42, 0], [0.19, 0.49, 0], [0.12, 0.49, 0]], dtype=np.float32)  # Esquina inferior derecha
-    ]
+    obj_points = np.array([
+        [0, 0, 0], [0.07, 0, 0], [0.07, 0.07, 0], [0, 0.07, 0],  # Esquina superior izquierda
+        [0.12, 0, 0], [0.19, 0, 0], [0.19, 0.07, 0], [0.12, 0.07, 0],  # Esquina superior derecha
+        [0, 0.42, 0], [0.07, 0.42, 0], [0.07, 0.49, 0], [0, 0.49, 0],  # Esquina inferior izquierda
+        [0.12, 0.42, 0], [0.19, 0.42, 0], [0.19, 0.49, 0], [0.12, 0.49, 0]  # Esquina inferior derecha
+    ], dtype=np.float32)
 
     # IDs de los marcadores
     ids = np.array([2, 3, 4, 5], dtype=np.int32)
 
     # Crear el objeto Board
-    board = cv2.aruco.Board(obj_points, aruco_dict, ids)
+    board = cv2.aruco.Board(obj_points.reshape(-1, 4, 3), aruco_dict, ids)
 
     # Inicializar variables para el tiempo de procesamiento
     total_time = 0
@@ -41,29 +41,32 @@ def detect_lateral_aruco_board(cam_matrix, dist_coeffs, marker_length=0.08, show
         start_time = time.time()
 
         # Detección de marcadores
-        corners, ids, rejected = detector.detectMarkers(image)
+        corners, detected_ids, rejected = detector.detectMarkers(image)
 
         # Convertir rejected a numpy array si es necesario
         if isinstance(rejected, list):
             rejected = np.array(rejected, dtype=object)
 
         # Estrategia de refinamiento para detectar más marcadores
-        if refind_strategy and ids is not None:
-            cv2.aruco.refineDetectedMarkers(image, board, corners, ids, rejected, cam_matrix, dist_coeffs)
+        if refind_strategy and detected_ids is not None:
+            cv2.aruco.refineDetectedMarkers(image, board, corners, detected_ids, rejected, cam_matrix, dist_coeffs)
 
         # Estimación de la pose del tablero
-        if ids is not None and len(ids) > 0:
+        if detected_ids is not None and len(detected_ids) > 0:  # Cambiado a >0 para dibujar con al menos un marcador detectado
             img_points = []
-            for i in range(len(ids)):
-                if ids[i] in [0, 1, 2, 3]:  # IDs de los marcadores en las esquinas
+            obj_points_detected = []
+            for i in range(len(detected_ids)):
+                if detected_ids[i] in ids:  # IDs de los marcadores en las esquinas
                     img_points.append(corners[i][0])
-            if len(img_points) == 4:
-                img_points = np.array(img_points, dtype=np.float32)
-                _, rvec, tvec = cv2.solvePnP(obj_points, img_points, cam_matrix, dist_coeffs)
+                    obj_points_detected.append(obj_points[ids.tolist().index(detected_ids[i]) * 4: (ids.tolist().index(detected_ids[i]) + 1) * 4])
+            if len(img_points) >= 1:  # Cambiado a >=1 para dibujar con al menos un marcador detectado
+                img_points = np.array(img_points).reshape(-1, 2)
+                obj_points_detected = np.array(obj_points_detected).reshape(-1, 3)
+                _, rvec, tvec = cv2.solvePnP(obj_points_detected.astype(np.float32), img_points.astype(np.float32), cam_matrix.astype(np.float32), dist_coeffs.astype(np.float32))
 
                 # Dibujar el eje de referencia
                 cv2.drawFrameAxes(image, cam_matrix, dist_coeffs, rvec, tvec, marker_length)
-
+        
         # Medir el tiempo de procesamiento
         current_time = time.time() - start_time
         total_time += current_time
@@ -73,8 +76,8 @@ def detect_lateral_aruco_board(cam_matrix, dist_coeffs, marker_length=0.08, show
 
         # Dibujar resultados
         image_copy = image.copy()
-        if ids is not None:
-            cv2.aruco.drawDetectedMarkers(image_copy, corners, ids)
+        if detected_ids is not None:
+            cv2.aruco.drawDetectedMarkers(image_copy, corners, detected_ids)
         
         if show_rejected and rejected is not None:
             cv2.aruco.drawDetectedMarkers(image_copy, rejected, borderColor=(100, 0, 255))
