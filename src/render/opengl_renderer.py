@@ -1,51 +1,57 @@
-import OpenGL.GL as gl
-import OpenGL.GLUT as glut
-import OpenGL.GLU as glu
 import numpy as np
+from OpenGL.GL import *
+from OpenGL.GLU import *
 import cv2
+import pygame
 
-def render_object(rvec, tvec, cam_matrix, dist_coeffs, model):
-    """
-    Renderiza un objeto 3D usando PyOpenGL.
-    """
-    def draw():
-        gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
-        gl.glLoadIdentity()
+def render_object(screen, image_np, rvec, tvec, camMatrix, distCoeffs, model):
+    # Configurar la proyección de la cámara
+    glMatrixMode(GL_PROJECTION)
+    glLoadIdentity()
+    
+    fx = camMatrix[0, 0]
+    fy = camMatrix[1, 1]
+    cx = camMatrix[0, 2]
+    cy = camMatrix[1, 2]
+    near = 0.1
+    far = 100.0
 
-        # Configurar la cámara
-        view_matrix = np.array([
-            [1, 0, 0, 0],
-            [0, -1, 0, 0],
-            [0, 0, -1, 0],
-            [0, 0, 0, 1]
-        ], dtype=np.float32)
+    glFrustum((cx - screen.get_width() / 2) / fx * near,
+              (cx + screen.get_width() / 2) / fx * near,
+              (cy - screen.get_height() / 2) / fy * near,
+              (cy + screen.get_height() / 2) / fy * near,
+              near, far)
 
-        gl.glMultMatrixf(view_matrix)
+    glMatrixMode(GL_MODELVIEW)
+    glLoadIdentity()
 
-        # Aplicar la transformación de la pose estimada
-        rot_matrix, _ = cv2.Rodrigues(rvec)
-        trans_matrix = np.hstack((rot_matrix, tvec))
-        trans_matrix = np.vstack((trans_matrix, [0, 0, 0, 1]))
+    # Configurar la vista de la cámara
+    rotM = cv2.Rodrigues(rvec)[0]
+    tvec = tvec.reshape((3, 1))  # Asegurarse de que tvec tenga la forma correcta
+    view_matrix = np.array([[rotM[0][0], rotM[0][1], rotM[0][2], tvec[0][0]],
+                            [rotM[1][0], rotM[1][1], rotM[1][2], tvec[1][0]],
+                            [rotM[2][0], rotM[2][1], rotM[2][2], tvec[2][0]],
+                            [0.0, 0.0, 0.0, 1.0]])
 
-        gl.glMultMatrixf(trans_matrix.T)
+    view_matrix = view_matrix.T
+    glLoadMatrixf(view_matrix)
 
-        # Renderizar el modelo
-        model.render()
+    # Renderizar la imagen de fondo
+    glDrawPixels(image_np.shape[1], image_np.shape[0], GL_BGR, GL_UNSIGNED_BYTE, image_np)
 
-        glut.glutSwapBuffers()
+    # Renderizar el modelo 3D
+    glEnable(GL_DEPTH_TEST)
+    glClear(GL_DEPTH_BUFFER_BIT)
+    glPushMatrix()
+    glTranslatef(0.0, 0.0, -5.0)  # Ajusta la posición del modelo según sea necesario
+    glBegin(GL_TRIANGLES)
+    for face in model.faces:
+        for vertex in face:
+            glVertex3fv(model.vertices[vertex - 1])  # Ajuste aquí para evitar el error
+    glEnd()
+    glPopMatrix()
 
-    # Inicializar GLUT
-    glut.glutInit()
-    glut.glutInitDisplayMode(glut.GLUT_RGBA | glut.GLUT_DOUBLE | glut.GLUT_DEPTH)
-    glut.glutInitWindowSize(800, 600)
-    glut.glutCreateWindow("3D Object Rendering")
+    glDisable(GL_DEPTH_TEST)
 
-    # Configurar OpenGL
-    gl.glEnable(gl.GL_DEPTH_TEST)
-
-    # Configurar la función de dibujo
-    glut.glutDisplayFunc(draw)
-    glut.glutIdleFunc(draw)
-
-    # Iniciar el bucle principal de GLUT
-    glut.glutMainLoop()
+    # Actualizar la pantalla
+    pygame.display.flip()

@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-def detect_lateral_aruco_board(image, cam_matrix, dist_coeffs, marker_length=0.07, show_rejected=False, refind_strategy=True):
+def detect_lateral_aruco_board(image, cam_matrix, dist_coeffs, marker_length=0.07, refind_strategy=False):
     """
     Función para detectar los marcadores ArUco en una imagen y estimar su pose.
     """
@@ -33,7 +33,7 @@ def detect_lateral_aruco_board(image, cam_matrix, dist_coeffs, marker_length=0.0
 
     # Estrategia de refinamiento para detectar más marcadores
     if refind_strategy and detected_ids is not None:
-        cv2.aruco.refineDetectedMarkers(image, board, corners, detected_ids, rejected, cam_matrix, dist_coeffs)
+        cv2.aruco.ArucoDetector.refineDetectedMarkers(image, board, corners, detected_ids, rejected, cam_matrix, dist_coeffs)
 
     # Estimación de la pose del tablero
     if detected_ids is not None and len(detected_ids) > 0:
@@ -47,6 +47,7 @@ def detect_lateral_aruco_board(image, cam_matrix, dist_coeffs, marker_length=0.0
             img_points = np.array(img_points).reshape(-1, 2)
             obj_points_detected = np.array(obj_points_detected).reshape(-1, 3)
             _, rvec, tvec = cv2.solvePnP(obj_points_detected.astype(np.float32), img_points.astype(np.float32), cam_matrix.astype(np.float32), dist_coeffs.astype(np.float32))
-            return rvec, tvec
+            cv2.drawFrameAxes(image, cam_matrix, dist_coeffs, rvec, tvec, marker_length)
+            return rvec, tvec, image
 
-    return None, None
+    return None, None, image
