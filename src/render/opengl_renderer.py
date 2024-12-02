@@ -1,6 +1,6 @@
 import numpy as np
-from OpenGL.GL import *
-from OpenGL.GLU import *
+from OpenGL.GL import glMatrixMode, glLoadIdentity, glLoadMatrixf, glDrawPixels, glEnable, glClear, glPushMatrix, glTranslatef, glBegin, glVertex3fv, glEnd, glPopMatrix, glDisable, GL_PROJECTION, GL_MODELVIEW, GL_DEPTH_TEST, GL_DEPTH_BUFFER_BIT, GL_BGR, GL_UNSIGNED_BYTE, GL_TRIANGLES
+from OpenGL.GLU import gluPerspective
 import cv2
 import pygame
 
@@ -16,11 +16,15 @@ def render_object(screen, image_np, rvec, tvec, camMatrix, distCoeffs, model):
     near = 0.1
     far = 100.0
 
-    glFrustum((cx - screen.get_width() / 2) / fx * near,
-              (cx + screen.get_width() / 2) / fx * near,
-              (cy - screen.get_height() / 2) / fy * near,
-              (cy + screen.get_height() / 2) / fy * near,
-              near, far)
+    # Calcular la matriz de proyección de OpenGL a partir de la matriz de cámara de OpenCV
+    opengl_mtx = np.array([
+        [2*fx/screen.get_width(), 0.0, (screen.get_width() - 2*cx)/screen.get_width(), 0.0],
+        [0.0, -2*fy/screen.get_height(), (screen.get_height() - 2*cy)/screen.get_height(), 0.0],
+        [0.0, 0.0, (-far - near) / (far - near), -2.0*far*near/(far-near)],
+        [0.0, 0.0, -1.0, 0.0]
+    ])
+
+    glLoadMatrixf(opengl_mtx.T)
 
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
