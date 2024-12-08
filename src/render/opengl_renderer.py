@@ -1,6 +1,6 @@
 import numpy as np
-from OpenGL.GL import glMatrixMode, glLoadIdentity, glLoadMatrixf, glDrawPixels, glEnable, glClear, glPushMatrix, glTranslatef, glBegin, glVertex3fv, glEnd, glPopMatrix, glDisable, GL_PROJECTION, GL_MODELVIEW, GL_DEPTH_TEST, GL_DEPTH_BUFFER_BIT, GL_BGR, GL_UNSIGNED_BYTE, GL_TRIANGLES
-from OpenGL.GLU import gluPerspective
+from OpenGL.GL import *
+from OpenGL.GLU import *
 import cv2
 import pygame
 
@@ -43,19 +43,28 @@ def render_object(screen, image_np, rvec, tvec, camMatrix, distCoeffs, model):
     # Renderizar la imagen de fondo
     glDrawPixels(image_np.shape[1], image_np.shape[0], GL_BGR, GL_UNSIGNED_BYTE, image_np)
 
-    # Renderizar el modelo 3D
+    # Renderizar el modelo 3D en la posición [0, 0] del frame
     glEnable(GL_DEPTH_TEST)
     glClear(GL_DEPTH_BUFFER_BIT)
     glPushMatrix()
-    glTranslatef(0.0, 0.0, -5.0)  # Ajusta la posición del modelo según sea necesario
+    
+    # Ajustar la posición del modelo a [0, 0]
+    glTranslatef(0.0, 0.0, 0.0)  
+    
     glBegin(GL_TRIANGLES)
     for face in model.faces:
         for vertex in face:
-            glVertex3fv(model.vertices[vertex - 1])  # Ajuste aquí para evitar el error
+            glVertex3fv(model.vertices[vertex - 1])  
     glEnd()
+    
     glPopMatrix()
-
     glDisable(GL_DEPTH_TEST)
 
-    # Actualizar la pantalla
-    pygame.display.flip()
+    # Leer los píxeles renderizados en un array numpy
+    rendered_image = np.frombuffer(glReadPixels(0, 0, screen.get_width(), screen.get_height(), GL_BGR, GL_UNSIGNED_BYTE), dtype=np.uint8)
+    rendered_image = rendered_image.reshape((screen.get_height(), screen.get_width(), 3))
+    
+    # Voltear la imagen verticalmente para corregir la orientación
+    rendered_image = np.flipud(rendered_image)
+
+    return rendered_image

@@ -37,7 +37,7 @@ def main():
     pygame.display.set_caption("Camera Stream")
 
     # Cargar el modelo 3D
-    model = load_model("data/models/fox.obj")
+    model = load_model("data/models/charmander.obj")
 
     # Bucle principal
     running = True
@@ -57,7 +57,7 @@ def main():
 
         if rvec is not None and tvec is not None:
              # Renderizar el objeto 3D y mostrar la detección de ArUco
-             render_object(screen, image_np, rvec, tvec, camMatrix, distCoeffs, model)
+             image_np = render_object(screen, image_np, rvec, tvec, camMatrix, distCoeffs, model)
 
         # Convertir numpy.ndarray a pygame.Surface
         image_surface = pygame.surfarray.make_surface(image_np)
