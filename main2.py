@@ -1,7 +1,10 @@
 import cv2
 import numpy as np
 from src.utils.Calibracion import calibracion
-from src.aruco_detection.lateral_board_detection import detect_lateral_aruco_board
+from src.aruco_detection.lateral_board_detection1 import detect_lateral_aruco_board1
+from src.aruco_detection.lateral_board_detection2 import detect_lateral_aruco_board2
+from src.aruco_detection.lateral_board_detection3 import detect_lateral_aruco_board3
+from src.aruco_detection.lateral_board_detection4 import detect_lateral_aruco_board4
 from src.render.perejy_renderer import *
 
 # Configuración de la cámara
@@ -23,17 +26,65 @@ def main():
             break
 
         # Detectar marcadores ArUco y obtener la pose
-        rvec, tvec, image = detect_lateral_aruco_board(image, camMatrix, distCoeffs)
+        rvec1, tvec1, image = detect_lateral_aruco_board1(image, camMatrix, distCoeffs)
+        rvec2, tvec2, image = detect_lateral_aruco_board2(image, camMatrix, distCoeffs)
+        rvec3, tvec3, image = detect_lateral_aruco_board3(image, camMatrix, distCoeffs)
+        rvec4, tvec4, image = detect_lateral_aruco_board4(image, camMatrix, distCoeffs)
 
-        if rvec is not None and tvec is not None:
+        if rvec1 is not None and tvec1 is not None:
             # Renderizar el objeto 3D
             ##render_object(rvec, tvec, camMatrix, distCoeffs, model)
             
             # Convertir rvec a matriz de rotación
-            rotation_matrix, _ = cv2.Rodrigues(rvec)
+            rotation_matrix, _ = cv2.Rodrigues(rvec1)
 
             # Crear la matriz de proyección (3x4) combinando la matriz de rotación y el vector de traslación
-            projection_matrix = np.hstack((rotation_matrix, tvec))
+            projection_matrix = np.hstack((rotation_matrix, tvec1))
+            projection_matrix = np.dot(camMatrix,projection_matrix)
+            # Imprimir la matriz de proyección
+            #print("Matriz de Proyección:",projection_matrix)
+             
+            image = augment(image,obj,projection_matrix,(0,0.1))
+        
+        if rvec2 is not None and tvec2 is not None:
+            # Renderizar el objeto 3D
+            ##render_object(rvec, tvec, camMatrix, distCoeffs, model)
+            
+            # Convertir rvec a matriz de rotación
+            rotation_matrix, _ = cv2.Rodrigues(rvec2)
+
+            # Crear la matriz de proyección (3x4) combinando la matriz de rotación y el vector de traslación
+            projection_matrix = np.hstack((rotation_matrix, tvec2))
+            projection_matrix = np.dot(camMatrix,projection_matrix)
+            # Imprimir la matriz de proyección
+            #print("Matriz de Proyección:",projection_matrix)
+             
+            image = augment(image,obj,projection_matrix,(0.2,0.05))
+            
+        if rvec3 is not None and tvec3 is not None:
+            # Renderizar el objeto 3D
+            ##render_object(rvec, tvec, camMatrix, distCoeffs, model)
+            
+            # Convertir rvec a matriz de rotación
+            rotation_matrix, _ = cv2.Rodrigues(rvec3)
+
+            # Crear la matriz de proyección (3x4) combinando la matriz de rotación y el vector de traslación
+            projection_matrix = np.hstack((rotation_matrix, tvec3))
+            projection_matrix = np.dot(camMatrix,projection_matrix)
+            # Imprimir la matriz de proyección
+            #print("Matriz de Proyección:",projection_matrix)
+             
+            image = augment(image,obj,projection_matrix,(0.25,0.12))
+            
+        if rvec4 is not None and tvec4 is not None:
+            # Renderizar el objeto 3D
+            ##render_object(rvec, tvec, camMatrix, distCoeffs, model)
+            
+            # Convertir rvec a matriz de rotación
+            rotation_matrix, _ = cv2.Rodrigues(rvec4)
+
+            # Crear la matriz de proyección (3x4) combinando la matriz de rotación y el vector de traslación
+            projection_matrix = np.hstack((rotation_matrix, tvec4))
             projection_matrix = np.dot(camMatrix,projection_matrix)
             # Imprimir la matriz de proyección
             #print("Matriz de Proyección:",projection_matrix)

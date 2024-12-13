@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-def detect_lateral_aruco_board(image, cam_matrix, dist_coeffs, marker_length=0.07, refind_strategy=False):
+def detect_lateral_aruco_board2(image, cam_matrix, dist_coeffs, marker_length=0.07, refind_strategy=False):
     """
     Función para detectar los marcadores ArUco en una imagen y estimar su pose.
     """
