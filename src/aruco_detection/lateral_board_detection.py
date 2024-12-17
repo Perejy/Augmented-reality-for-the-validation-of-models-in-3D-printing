@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-def detect_lateral_aruco_board2(image, cam_matrix, dist_coeffs, marker_length=0.07, refind_strategy=False):
+def detect_lateral_aruco_board(image, cam_matrix, dist_coeffs, obj_points, ids, marker_length=0.07, refind_strategy=False):
     """
     Función para detectar los marcadores ArUco en una imagen y estimar su pose.
     """
@@ -9,17 +9,6 @@ def detect_lateral_aruco_board2(image, cam_matrix, dist_coeffs, marker_length=0.
     aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_6X6_50)
     detector_params = cv2.aruco.DetectorParameters()
     detector = cv2.aruco.ArucoDetector(aruco_dict, detector_params)
-
-    # Definir las posiciones de los marcadores en el tablero
-    obj_points = np.array([
-        [0, 0, 0], [0.07, 0, 0], [0.07, 0.07, 0], [0, 0.07, 0],  # Esquina superior izquierda
-        [0.12, 0, 0], [0.19, 0, 0], [0.19, 0.07, 0], [0.12, 0.07, 0],  # Esquina superior derecha
-        [0, 0.42, 0], [0.07, 0.42, 0], [0.07, 0.49, 0], [0, 0.49, 0],  # Esquina inferior izquierda
-        [0.12, 0.42, 0], [0.19, 0.42, 0], [0.19, 0.49, 0], [0.12, 0.49, 0]  # Esquina inferior derecha
-    ], dtype=np.float32)
-
-    # IDs de los marcadores
-    ids = np.array([2, 3, 4, 5], dtype=np.int32)
 
     # Crear el objeto Board
     board = cv2.aruco.Board(obj_points.reshape(-1, 4, 3), aruco_dict, ids)

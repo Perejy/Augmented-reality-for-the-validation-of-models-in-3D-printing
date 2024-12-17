@@ -1,23 +1,42 @@
 import cv2
 import numpy as np
 from src.utils.Calibracion import calibracion
-from src.aruco_detection.lateral_board_detection1 import detect_lateral_aruco_board1
-from src.aruco_detection.lateral_board_detection2 import detect_lateral_aruco_board2
-from src.aruco_detection.lateral_board_detection3 import detect_lateral_aruco_board3
-from src.aruco_detection.lateral_board_detection4 import detect_lateral_aruco_board4
+from src.utils.objectpoint_jsonreader import load_board_data
+from src.aruco_detection.lateral_board_detection import detect_lateral_aruco_board
 from src.render.perejy_renderer import *
+
+# Constante para la ruta del archivo JSON de los puntos de datos
+JSON_PATH = "data/json_data/object_points_data.json"
 
 # Configuración de la cámara
 calib = calibracion()  # Objeto calibracion 
 camMatrix, distCoeffs, _ = calib.calibracion_cam()
+
+def render_if_detected(rvec, tvec, image, obj, cam_matrix, offset):
+    """
+    Función auxiliar para convertir rvec/tvec a proyección y renderizar el objeto.
+    """
+    if rvec is not None and tvec is not None:
+        rotation_matrix, _ = cv2.Rodrigues(rvec)
+        projection_matrix = np.hstack((rotation_matrix, tvec))
+        projection_matrix = np.dot(cam_matrix, projection_matrix)
+        return augment(image, obj, projection_matrix, offset)
+    return image
 
 def main():
     # Configuración de video
     input_video = cv2.VideoCapture(1)
     wait_time = 10
 
+    # Cargar los object points e ids de las distintas caras en una lista
+    board_faces = [
+        load_board_data(JSON_PATH, face_num) for face_num in range(1, 5)
+    ]
+    
+    # Posiciones del objeto 3D para cada cara (offsets) [cara 1 (h,w), cara 2, cara 3, cara 4]
+    object_offsets = [(0, 0.1), (0.2, 0.05), (0.25, 0.12), (0.2, 0.05)]
+
     # Cargar el modelo 3D
-    # obj = three_d_object('data/models/fox.obj', "data/textures/texture.png")
     obj = three_d_object('data/models/charmander.obj', "data/textures/texture.png")
 
     while True:
@@ -25,71 +44,10 @@ def main():
         if not ret:
             break
 
-        # Detectar marcadores ArUco y obtener la pose
-        rvec1, tvec1, image = detect_lateral_aruco_board1(image, camMatrix, distCoeffs)
-        rvec2, tvec2, image = detect_lateral_aruco_board2(image, camMatrix, distCoeffs)
-        rvec3, tvec3, image = detect_lateral_aruco_board3(image, camMatrix, distCoeffs)
-        rvec4, tvec4, image = detect_lateral_aruco_board4(image, camMatrix, distCoeffs)
-
-        if rvec1 is not None and tvec1 is not None:
-            # Renderizar el objeto 3D
-            ##render_object(rvec, tvec, camMatrix, distCoeffs, model)
-            
-            # Convertir rvec a matriz de rotación
-            rotation_matrix, _ = cv2.Rodrigues(rvec1)
-
-            # Crear la matriz de proyección (3x4) combinando la matriz de rotación y el vector de traslación
-            projection_matrix = np.hstack((rotation_matrix, tvec1))
-            projection_matrix = np.dot(camMatrix,projection_matrix)
-            # Imprimir la matriz de proyección
-            #print("Matriz de Proyección:",projection_matrix)
-             
-            image = augment(image,obj,projection_matrix,(0,0.1))
-        
-        if rvec2 is not None and tvec2 is not None:
-            # Renderizar el objeto 3D
-            ##render_object(rvec, tvec, camMatrix, distCoeffs, model)
-            
-            # Convertir rvec a matriz de rotación
-            rotation_matrix, _ = cv2.Rodrigues(rvec2)
-
-            # Crear la matriz de proyección (3x4) combinando la matriz de rotación y el vector de traslación
-            projection_matrix = np.hstack((rotation_matrix, tvec2))
-            projection_matrix = np.dot(camMatrix,projection_matrix)
-            # Imprimir la matriz de proyección
-            #print("Matriz de Proyección:",projection_matrix)
-             
-            image = augment(image,obj,projection_matrix,(0.2,0.05))
-            
-        if rvec3 is not None and tvec3 is not None:
-            # Renderizar el objeto 3D
-            ##render_object(rvec, tvec, camMatrix, distCoeffs, model)
-            
-            # Convertir rvec a matriz de rotación
-            rotation_matrix, _ = cv2.Rodrigues(rvec3)
-
-            # Crear la matriz de proyección (3x4) combinando la matriz de rotación y el vector de traslación
-            projection_matrix = np.hstack((rotation_matrix, tvec3))
-            projection_matrix = np.dot(camMatrix,projection_matrix)
-            # Imprimir la matriz de proyección
-            #print("Matriz de Proyección:",projection_matrix)
-             
-            image = augment(image,obj,projection_matrix,(0.25,0.12))
-            
-        if rvec4 is not None and tvec4 is not None:
-            # Renderizar el objeto 3D
-            ##render_object(rvec, tvec, camMatrix, distCoeffs, model)
-            
-            # Convertir rvec a matriz de rotación
-            rotation_matrix, _ = cv2.Rodrigues(rvec4)
-
-            # Crear la matriz de proyección (3x4) combinando la matriz de rotación y el vector de traslación
-            projection_matrix = np.hstack((rotation_matrix, tvec4))
-            projection_matrix = np.dot(camMatrix,projection_matrix)
-            # Imprimir la matriz de proyección
-            #print("Matriz de Proyección:",projection_matrix)
-             
-            image = augment(image,obj,projection_matrix,(0.2,0.05))
+        # Procesar cada cara del tablero
+        for i, ((obj_points, ids), offset) in enumerate(zip(board_faces, object_offsets), start=1):
+            rvec, tvec, image = detect_lateral_aruco_board(image, camMatrix, distCoeffs, obj_points, ids)
+            image = render_if_detected(rvec, tvec, image, obj, camMatrix, offset)
 
         # Mostrar el resultado en pantalla
         cv2.imshow("Board Detection", image)
