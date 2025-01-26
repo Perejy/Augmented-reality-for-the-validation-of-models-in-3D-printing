@@ -34,10 +34,15 @@ def main():
     ]
     
     # Posiciones del objeto 3D para cada cara (offsets) [cara 1 (h,w), cara 2, cara 3, cara 4]
-    object_offsets = [(0, 0.1), (0.2, 0.05), (0.25, 0.12), (0.2, 0.05)]
+    #object_offsets = [(0, 0.1), (0.2, 0.05), (0.25, 0.12), (0.2, 0.05)]
+    object_offsets = [(0, 0), (0, 0), (0, 0), (0, 0)]
 
     # Cargar el modelo 3D
-    obj = three_d_object('data/models/charmander.obj', "data/textures/texture.png")
+    obj1 = three_d_object('data/models/front/banana.obj', None)
+    obj2 = three_d_object('data/models/lateral/lateral3.obj', "data/textures/texture.png")
+    obj3 = three_d_object('data/models/back/back.obj', "data/textures/texture.png")
+    obj4 = three_d_object('data/models/lateral/lateral3.obj', "data/textures/texture.png")
+    objs = [obj1,obj2,obj3,obj4]
 
     while True:
         ret, image = input_video.read()
@@ -47,7 +52,7 @@ def main():
         # Procesar cada cara del tablero
         for i, ((obj_points, ids), offset) in enumerate(zip(board_faces, object_offsets), start=1):
             rvec, tvec, image = detect_lateral_aruco_board(image, camMatrix, distCoeffs, obj_points, ids)
-            image = render_if_detected(rvec, tvec, image, obj, camMatrix, offset)
+            image = render_if_detected(rvec, tvec, image, objs[i-1], camMatrix, offset)
 
         # Mostrar el resultado en pantalla
         cv2.imshow("Board Detection", image)

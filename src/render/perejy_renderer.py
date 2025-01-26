@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 
-def augment(img, obj, projection, center, scale = 0.005):
+def augment(img, obj, projection, center, scale = 0.01):
     # takes the captureed image, object to augment, and transformation matrix  
     #adjust scale to make the object smaller or bigger, 4 works for the fox
     
