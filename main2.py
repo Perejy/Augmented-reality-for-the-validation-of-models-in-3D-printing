@@ -36,12 +36,14 @@ def main():
     # Posiciones del objeto 3D para cada cara (offsets) [cara 1 (h,w), cara 2, cara 3, cara 4]
     #object_offsets = [(0, 0.1), (0.2, 0.05), (0.25, 0.12), (0.2, 0.05)]
     object_offsets = [(0, 0), (0, 0), (0, 0), (0, 0)]
+    
+    texture = "data/textures/texture.png"
 
     # Cargar el modelo 3D
-    obj1 = three_d_object('data/models/front/banana.obj', None)
-    obj2 = three_d_object('data/models/lateral/lateral3.obj', "data/textures/texture.png")
-    obj3 = three_d_object('data/models/back/back.obj', "data/textures/texture.png")
-    obj4 = three_d_object('data/models/lateral/lateral3.obj', "data/textures/texture.png")
+    obj1 = three_d_object('data/models/front/banana.obj', texture)
+    obj2 = three_d_object('data/models/lateral/lateral3.obj', texture)
+    obj3 = three_d_object('data/models/back/back.obj', texture)
+    obj4 = three_d_object('data/models/lateral/lateral3.obj', texture)
     objs = [obj1,obj2,obj3,obj4]
 
     while True:
