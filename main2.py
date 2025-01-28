@@ -53,7 +53,7 @@ def main():
 
         # Procesar cada cara del tablero
         for i, ((obj_points, ids), offset) in enumerate(zip(board_faces, object_offsets), start=1):
-            rvec, tvec, image = detect_lateral_aruco_board(image, camMatrix, distCoeffs, obj_points, ids)
+            rvec, tvec, image = detect_lateral_aruco_board(image, camMatrix, distCoeffs, obj_points, ids, face_id=i)
             image = render_if_detected(rvec, tvec, image, objs[i-1], camMatrix, offset)
 
         # Mostrar el resultado en pantalla
