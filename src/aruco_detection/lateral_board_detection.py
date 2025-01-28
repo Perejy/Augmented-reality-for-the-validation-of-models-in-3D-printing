@@ -1,25 +1,26 @@
 import cv2
 import numpy as np
 
-def detect_lateral_aruco_board(image, cam_matrix, dist_coeffs, marker_length=0.07, refind_strategy=False):
+# Diccionarios globales para el suavizado (un historial para cada cara)
+prev_rvec_dict = {}
+prev_tvec_dict = {}
+alpha = 0.8  # Peso para el filtro exponencial
+
+def detect_lateral_aruco_board(image, cam_matrix, dist_coeffs, obj_points, ids, marker_length=0.07, refind_strategy=False, face_id=None):
     """
     Función para detectar los marcadores ArUco en una imagen y estimar su pose.
     """
+    global prev_rvec_dict, prev_tvec_dict, alpha
+
+    # Inicializar los valores previos para esta cara si no existen
+    if face_id not in prev_rvec_dict:
+        prev_rvec_dict[face_id] = None
+        prev_tvec_dict[face_id] = None
+
     # Cargar el diccionario de marcadores y parámetros de detección
     aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_6X6_50)
     detector_params = cv2.aruco.DetectorParameters()
     detector = cv2.aruco.ArucoDetector(aruco_dict, detector_params)
-
-    # Definir las posiciones de los marcadores en el tablero
-    obj_points = np.array([
-        [0, 0, 0], [0.07, 0, 0], [0.07, 0.07, 0], [0, 0.07, 0],  # Esquina superior izquierda
-        [0.12, 0, 0], [0.19, 0, 0], [0.19, 0.07, 0], [0.12, 0.07, 0],  # Esquina superior derecha
-        [0, 0.42, 0], [0.07, 0.42, 0], [0.07, 0.49, 0], [0, 0.49, 0],  # Esquina inferior izquierda
-        [0.12, 0.42, 0], [0.19, 0.42, 0], [0.19, 0.49, 0], [0.12, 0.49, 0]  # Esquina inferior derecha
-    ], dtype=np.float32)
-
-    # IDs de los marcadores
-    ids = np.array([2, 3, 4, 5], dtype=np.int32)
 
     # Crear el objeto Board
     board = cv2.aruco.Board(obj_points.reshape(-1, 4, 3), aruco_dict, ids)
@@ -47,6 +48,30 @@ def detect_lateral_aruco_board(image, cam_matrix, dist_coeffs, marker_length=0.0
             img_points = np.array(img_points).reshape(-1, 2)
             obj_points_detected = np.array(obj_points_detected).reshape(-1, 3)
             _, rvec, tvec = cv2.solvePnP(obj_points_detected.astype(np.float32), img_points.astype(np.float32), cam_matrix.astype(np.float32), dist_coeffs.astype(np.float32))
+            
+            # Recalcular el eje Z
+            rmat, _ = cv2.Rodrigues(rvec)
+            x_axis = rmat[:, 0]  # Eje X
+            y_axis = rmat[:, 1]  # Eje Y
+            
+            # Calcular el eje Z como el producto cruzado entre X e Y
+            z_axis = np.cross(x_axis, y_axis)
+            z_axis /= np.linalg.norm(z_axis)
+            
+            # Reconstruir la matriz de rotación
+            rmat[:, 2] = z_axis
+            rvec, _ = cv2.Rodrigues(rmat)
+
+            # Suavizar rvec y tvec
+            if prev_rvec_dict[face_id] is not None and prev_tvec_dict[face_id] is not None:
+                rvec = alpha * prev_rvec_dict[face_id] + (1 - alpha) * rvec
+                tvec = alpha * prev_tvec_dict[face_id] + (1 - alpha) * tvec
+
+            # Guardar los valores actuales para esta cara
+            prev_rvec_dict[face_id] = rvec
+            prev_tvec_dict[face_id] = tvec
+
+            # Dibujar los ejes ajustados
             cv2.drawFrameAxes(image, cam_matrix, dist_coeffs, rvec, tvec, marker_length)
             return rvec, tvec, image
 
