@@ -4,7 +4,7 @@ from src.utils.Calibracion import calibracion
 from src.utils.objectpoint_jsonreader import load_board_data
 from src.aruco_detection.lateral_board_detection import detect_lateral_aruco_board
 from src.render.perejy_renderer import *
-from src.utils.objCenterer import align_obj_to_ground
+from src.utils.objCenterer import align_obj
 from src.utils.offset_updater import update_offsets
 
 # Constante para la ruta del archivo JSON de los puntos de datos
@@ -41,9 +41,9 @@ def main():
     
     texture = "data/textures/texture.png"
     
-    align_obj_to_ground('data/models/front/banana.obj', 'data/models/alineado/banana.obj')
-    align_obj_to_ground('data/models/lateral/lateral3.obj', 'data/models/alineado/lateral3.obj')
-    align_obj_to_ground('data/models/back/back.obj', 'data/models/alineado/back.obj')
+    align_obj('data/models/front/banana.obj', 'data/models/alineado/banana.obj')
+    align_obj('data/models/lateral/lateral3.obj', 'data/models/alineado/lateral3.obj')
+    align_obj('data/models/back/back.obj', 'data/models/alineado/back.obj')
     
     # Cargar el modelo 3D
     obj1 = three_d_object('data/models/alineado/banana.obj', texture)
