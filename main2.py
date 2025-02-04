@@ -7,7 +7,7 @@ from src.utils.objectpoint_jsonreader import *
 from src.aruco_detection.lateral_board_detection import detect_lateral_aruco_board
 from src.render.perejy_renderer import *
 from src.utils.objCenterer import align_obj
-from src.utils.offset_updater import update_offsets
+from src.utils.offset_updater import *
 
 # Constante para la ruta del archivo JSON de los puntos de datos
 JSON_PATH = "data/json_data/object_points_data.json"
@@ -102,7 +102,7 @@ def main():
         elif key in [ord('w'), ord('a'), ord('s'), ord('d'), ord('q'), ord('e')]:  # Movimiento WASD y rotacion QE
             update_offsets(key, object_offsets, selected_index)
         elif key == ord('p'):
-            print("object_offsets:", object_offsets)
+            guardar_offsets(object_offsets)  # Llama a la función para guardar o imprimir los offsets
     
     input_video.release()
     cv2.destroyAllWindows()
