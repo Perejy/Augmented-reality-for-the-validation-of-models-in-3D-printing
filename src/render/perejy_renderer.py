@@ -2,29 +2,42 @@ import cv2
 import numpy as np
 
 
-def augment(img, obj, projection, center, selected = False ,scale = 0.01):
-    # takes the captureed image, object to augment, and transformation matrix  
-    #adjust scale to make the object smaller or bigger, 4 works for the fox
+def augment(img, obj, projection, center, selected=False, scale=0.01, alpha=0.8):
+    """
+    Renderiza un objeto 3D en la imagen con transparencia.
     
-    h = center[0]
-    w = center[1]
+    Args:
+        img: Imagen de fondo.
+        obj: Objeto 3D a renderizar.
+        projection: Matriz de proyección para transformación de coordenadas.
+        center: Centro del objeto en la imagen.
+        selected: Si es True, pinta en verde el objeto.
+        scale: Escala del objeto renderizado.
+        alpha: Nivel de transparencia (0 = invisible, 1 = opaco).
+
+    Returns:
+        img: Imagen con el objeto renderizado semitransparente.
+    """
+    h, w = center[0], center[1]
     vertices = obj.vertices
+    overlay = img.copy()  # Capa para dibujar el objeto 3D
     img = np.ascontiguousarray(img, dtype=np.uint8)
 
-    #projecting the faces to pixel coords and then drawing
     for face in obj.faces:
-        #a face is a list [face_vertices, face_tex_coords, face_col]
         face_vertices = face[0]
-        points = np.array([vertices[vertex - 1] for vertex in face_vertices]) #-1 because of the shifted numbering
-        points = scale*points
-        points = np.array([[p[1] + w, p[0] + h, -p[2]] for p in points]) #shifted to centre 
-        dst = cv2.perspectiveTransform(points.reshape(-1, 1, 3), projection)#transforming to pixel coords
+        points = np.array([vertices[vertex - 1] for vertex in face_vertices])  # -1 por indexado
+        points = scale * points
+        points = np.array([[p[1] + w, p[0] + h, -p[2]] for p in points])  # Ajuste de centro
+        dst = cv2.perspectiveTransform(points.reshape(-1, 1, 3), projection)
         imgpts = np.int32(dst)
-        if selected : 
-            cv2.fillConvexPoly(img, imgpts, (0, 255, 0))
-        else:
-            cv2.fillConvexPoly(img, imgpts, face[-1])
-        
+
+        # Color del polígono
+        color = (0, 255, 0) if selected else face[-1]
+        cv2.fillConvexPoly(overlay, imgpts, color)
+
+    # Mezclar la imagen original con la capa del objeto renderizado
+    img = cv2.addWeighted(overlay, alpha, img, 1 - alpha, 0)
+
     return img
 
 class three_d_object:
