@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 
-def augment(img, obj, projection, center, scale = 0.01):
+def augment(img, obj, projection, center, selected = False ,scale = 0.01):
     # takes the captureed image, object to augment, and transformation matrix  
     #adjust scale to make the object smaller or bigger, 4 works for the fox
     
@@ -20,7 +20,10 @@ def augment(img, obj, projection, center, scale = 0.01):
         points = np.array([[p[1] + w, p[0] + h, -p[2]] for p in points]) #shifted to centre 
         dst = cv2.perspectiveTransform(points.reshape(-1, 1, 3), projection)#transforming to pixel coords
         imgpts = np.int32(dst)
-        cv2.fillConvexPoly(img, imgpts, face[-1])
+        if selected : 
+            cv2.fillConvexPoly(img, imgpts, (0, 255, 0))
+        else:
+            cv2.fillConvexPoly(img, imgpts, face[-1])
         
     return img
 
