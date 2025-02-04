@@ -46,9 +46,9 @@ def main():
         object_offsets = load_sancho_offsets()
         if object_offsets is None:
             print("Error cargando los offsets de Sancho. Usando valores por defecto.")
-            object_offsets = [(0, 0), (0, 0), (0, 0), (0, 0)]
+            object_offsets = [(0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0)]
     else:
-        object_offsets = [(0, 0), (0, 0), (0, 0), (0, 0)]  # Configuración por defecto
+        object_offsets = [(0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0)]  # Configuración por defecto
     
     # Configuración de video
     input_video = cv2.VideoCapture(1)
@@ -99,7 +99,7 @@ def main():
         elif key == ord('4'):
             selected_index = 3
             print("Se ha seleccionado la cara derecha del robot")
-        elif key in [ord('w'), ord('a'), ord('s'), ord('d')]:  # Movimiento WASD
+        elif key in [ord('w'), ord('a'), ord('s'), ord('d'), ord('q'), ord('e')]:  # Movimiento WASD y rotacion QE
             update_offsets(key, object_offsets, selected_index)
         elif key == ord('p'):
             print("object_offsets:", object_offsets)

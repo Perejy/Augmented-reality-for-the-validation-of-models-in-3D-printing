@@ -2,10 +2,36 @@ import cv2
 import numpy as np
 
 
+def rotate_vertices(vertices, angle):
+    """Rota los vértices del objeto 3D alrededor de su centro en el eje Z."""
+    angle_rad = np.radians(angle)
+
+    # Calculamos el centro del objeto (media de los vértices)
+    center = np.mean(vertices, axis=0)
+
+    # Restamos el centro de los vértices para moverlos al origen
+    vertices_centered = vertices - center
+
+    # Matriz de rotación alrededor del eje Z
+    rotation_matrix = np.array([
+        [np.cos(angle_rad), -np.sin(angle_rad), 0],
+        [np.sin(angle_rad), np.cos(angle_rad),  0],
+        [0, 0, 1]
+    ])
+
+    # Rotamos los vértices
+    rotated_vertices_centered = np.dot(vertices_centered, rotation_matrix.T)
+
+    # Sumamos el centro de vuelta a los vértices rotados
+    rotated_vertices = rotated_vertices_centered + center
+
+    return rotated_vertices
+
+
 def augment(img, obj, projection, center, selected=False, scale=0.01, alpha=0.8):
     """
     Renderiza un objeto 3D en la imagen con transparencia.
-    
+
     Args:
         img: Imagen de fondo.
         obj: Objeto 3D a renderizar.
@@ -14,19 +40,26 @@ def augment(img, obj, projection, center, selected=False, scale=0.01, alpha=0.8)
         selected: Si es True, pinta en verde el objeto.
         scale: Escala del objeto renderizado.
         alpha: Nivel de transparencia (0 = invisible, 1 = opaco).
+        rotation_angle: Ángulo de rotación en grados.
 
     Returns:
         img: Imagen con el objeto renderizado semitransparente.
     """
     h, w = center[0], center[1]
-    vertices = obj.vertices
+
+    # Convierte los vértices a un array de numpy si no lo son
+    vertices = np.array(obj.vertices)  # Asegúrate de que obj.vertices es una lista de listas o un array de numpy
+    vertices = vertices * scale  # Aplica la escala
+
+    # Rotar los vértices
+    rotated_vertices = rotate_vertices(vertices, center[2])  # Aquí rotamos los vértices
+
     overlay = img.copy()  # Capa para dibujar el objeto 3D
     img = np.ascontiguousarray(img, dtype=np.uint8)
 
     for face in obj.faces:
         face_vertices = face[0]
-        points = np.array([vertices[vertex - 1] for vertex in face_vertices])  # -1 por indexado
-        points = scale * points
+        points = np.array([rotated_vertices[vertex - 1] for vertex in face_vertices])  # -1 por indexado
         points = np.array([[p[1] + w, p[0] + h, -p[2]] for p in points])  # Ajuste de centro
         dst = cv2.perspectiveTransform(points.reshape(-1, 1, 3), projection)
         imgpts = np.int32(dst)
@@ -39,6 +72,7 @@ def augment(img, obj, projection, center, selected=False, scale=0.01, alpha=0.8)
     img = cv2.addWeighted(overlay, alpha, img, 1 - alpha, 0)
 
     return img
+
 
 class three_d_object:
     def __init__(self, filename_obj, filename_texture, color_fixed = False):
