@@ -60,9 +60,9 @@ def main():
     # Preparar los modelos
     texture = "data/textures/texture.png"
     
-    align_obj('data/models/front/banana.obj', 'data/models/alineado/banana.obj')
-    align_obj('data/models/lateral/lateral3.obj', 'data/models/alineado/lateral3.obj')
-    align_obj('data/models/back/back.obj', 'data/models/alineado/back.obj')
+    align_obj('data/models/front/flower.obj', 'data/models/alineado/banana.obj')
+    align_obj('data/models/lateral/lateralSancho.obj', 'data/models/alineado/lateral3.obj')
+    align_obj('data/models/back/backSancho.obj', 'data/models/alineado/back.obj')
 
     obj1 = three_d_object('data/models/alineado/banana.obj', texture)
     obj2 = three_d_object('data/models/alineado/lateral3.obj', texture)
