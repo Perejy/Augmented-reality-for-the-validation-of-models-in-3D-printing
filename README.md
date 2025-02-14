@@ -1,6 +1,9 @@
 # Augmented-reality-for-the-validation-of-models-in-3D-printing
 
-Aplicación capaz de generar un entorno de realidad aumentada que permita validar modelos de impresión 3D previsualizando los mismos sobre su plataforma final ejemplificada en el robot móvil Sancho, optimizando de este modo su proceso de fabricación.
+Este Trabajo de Fin de Grado propone una solución basada en realidad aumentada para la validación previa de modelos 3D antes de su impresión, aplicándolo al robot móvil Sancho como caso de estudio. 
+
+La aplicación desarrollada permite la superposición en tiempo real de los modelos sobre la plataforma robótica, garantizando su correcta escala y ajuste mediante técnicas de visión por computador y el uso de marcadores ArUco. 
+
 
 ## Librerias a instalar 
 
