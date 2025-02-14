@@ -1,0 +1,3 @@
+numpy==1.24.2                     # Versión específica de numpy
+opencv-contrib-python==4.10.0.84  # Versión de OpenCV con módulos extra (incluye ArUco)
+opencv-python==4.10.0.84          # Versión principal de OpenCV

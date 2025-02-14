@@ -19,7 +19,7 @@ class calibracion():
         self.puntos_img = []
         
     def calibracion_cam(self):
-        fotos = glob.glob('Calibracion\*.jpeg')
+        fotos = glob.glob('data\calibration\*.jpeg')
         for foto in fotos:
             ## print(foto)  # Muestra las imagenes de calibración
             img = cv2.imread(foto)
