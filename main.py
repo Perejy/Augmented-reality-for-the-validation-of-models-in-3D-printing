@@ -17,16 +17,10 @@ calib = calibracion()
 camMatrix, distCoeffs, _ = calib.calibracion_cam()
 
 def seleccionar_configuracion():
-    """
-    Función para mostrar una ventana emergente y preguntar por la configuración de Sancho.
-    Retorna True si el usuario elige "Sí", False si elige "No".
-    """
     root = tk.Tk()
-    root.withdraw()  # Oculta la ventana principal
-
-    respuesta = messagebox.askyesno("Configuración del Robot", 
-                                    "¿Quieres iniciar con la configuración para el robot Sancho?")
-    root.destroy()  # Cierra la ventana emergente
+    root.withdraw()
+    respuesta = messagebox.askyesno("Configuración del Robot", "¿Quieres iniciar con la configuración para el robot Sancho?")
+    root.destroy()
     return respuesta
 
 def render_if_detected(rvec, tvec, image, obj, cam_matrix, offset, seleccionado):
@@ -38,39 +32,43 @@ def render_if_detected(rvec, tvec, image, obj, cam_matrix, offset, seleccionado)
     return image
 
 def main():
-    # Preguntar al usuario si quiere la configuración de Sancho
     usa_sancho = seleccionar_configuracion()
 
-    # Cargar offsets según la elección
     if usa_sancho:
         object_offsets = load_sancho_offsets()
         if object_offsets is None:
             print("Error cargando los offsets de Sancho. Usando valores por defecto.")
-            object_offsets = [(0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0)]
+            object_offsets = [(0, 0, 0)] * 4
     else:
-        object_offsets = [(0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0)]  # Configuración por defecto
-    
-    # Configuración de video
-    input_video = cv2.VideoCapture(1)
-    wait_time = 10
+        object_offsets = [(0, 0, 0)] * 4
 
-    # Cargar los object points e ids de las distintas caras
+    # Configuración de video
+    input_path = "VideoSancho1.mp4"  # Ruta del video de entrada
+    output_path = "VideoSancho1_Resultado.mp4"  # Ruta del video de salida
+
+    input_video = cv2.VideoCapture(input_path)
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    fps = int(input_video.get(cv2.CAP_PROP_FPS))
+    width = int(input_video.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(input_video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    output_video = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+
     board_faces = [load_board_data(JSON_PATH, face_num) for face_num in range(1, 5)]
 
-    # Preparar los modelos
     texture = "data/textures/texture.png"
-    
+
     align_obj('data/models/front/flower.obj', 'data/models/alineado/banana.obj')
     align_obj('data/models/lateral/lateralSancho.obj', 'data/models/alineado/lateral3.obj')
     align_obj('data/models/back/backSancho.obj', 'data/models/alineado/back.obj')
 
-    obj1 = three_d_object('data/models/alineado/banana.obj', texture)
-    obj2 = three_d_object('data/models/alineado/lateral3.obj', texture)
-    obj3 = three_d_object('data/models/alineado/back.obj', texture)
-    obj4 = three_d_object('data/models/alineado/lateral3.obj', texture)
-    objs = [obj1, obj2, obj3, obj4]
+    objs = [
+        three_d_object('data/models/alineado/banana.obj', texture),
+        three_d_object('data/models/alineado/lateral3.obj', texture),
+        three_d_object('data/models/alineado/back.obj', texture),
+        three_d_object('data/models/alineado/lateral3.obj', texture)
+    ]
 
-    selected_index = 0  # Índice de la cara seleccionada
+    selected_index = 0
 
     while True:
         ret, image = input_video.read()
@@ -82,29 +80,22 @@ def main():
             seleccionado = (i == selected_index + 1)
             image = render_if_detected(rvec, tvec, image, objs[i-1], camMatrix, offset, seleccionado)
 
+        output_video.write(image)
         cv2.imshow("Board Detection", image)
-        key = cv2.waitKey(wait_time) & 0xFF
-        
+        key = cv2.waitKey(1) & 0xFF  # Se mantiene un valor bajo para simular video fluido
+
         if key == 27:  # Esc para salir
             break
-        elif key == ord('1'):
-            selected_index = 0
-            print("Se ha seleccionado la cara frontal del robot")
-        elif key == ord('2'):
-            selected_index = 1
-            print("Se ha seleccionado la cara izquierda del robot")
-        elif key == ord('3'):
-            selected_index = 2
-            print("Se ha seleccionado la cara trasera del robot")
-        elif key == ord('4'):
-            selected_index = 3
-            print("Se ha seleccionado la cara derecha del robot")
-        elif key in [ord('w'), ord('a'), ord('s'), ord('d'), ord('q'), ord('e')]:  # Movimiento WASD y rotacion QE
+        elif key in [ord('1'), ord('2'), ord('3'), ord('4')]:
+            selected_index = int(chr(key)) - 1
+            print(f"Se ha seleccionado la cara {selected_index + 1}")
+        elif key in [ord('w'), ord('a'), ord('s'), ord('d'), ord('q'), ord('e')]:
             update_offsets(key, object_offsets, selected_index)
         elif key == ord('p'):
-            guardar_offsets(object_offsets)  # Llama a la función para guardar o imprimir los offsets
-    
+            guardar_offsets(object_offsets)
+
     input_video.release()
+    output_video.release()
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":
