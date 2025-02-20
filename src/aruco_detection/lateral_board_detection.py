@@ -4,7 +4,7 @@ import numpy as np
 # Diccionarios globales para el suavizado (un historial para cada cara)
 prev_rvec_dict = {}
 prev_tvec_dict = {}
-alpha = 0.8  # Peso para el filtro exponencial
+alpha = 0.57  # Peso para el filtro exponencial
 
 def detect_lateral_aruco_board(image, cam_matrix, dist_coeffs, obj_points, ids, marker_length=0.07, refind_strategy=False, face_id=None):
     """
